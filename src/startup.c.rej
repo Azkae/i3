@@ -1,0 +1,34 @@
+--- src/startup.c
++++ src/startup.c
+@@ -193,6 +194,31 @@
+             if (!no_startup_id)
+                 sn_launcher_context_setup_child_process(context);
+ 
++            if (focused->window && focused->window->name->utf8) {
++                const char *spawn_cwd_delim = ":";
++                const char *home = getenv("HOME");
++                const size_t homelen = strlen(home);
++                char *cwd, *pathbuf = NULL;
++                struct stat statbuf;
++
++                cwd = strtok(focused->window->name->utf8, spawn_cwd_delim);
++                while (cwd) {
++                    if (*cwd == '~')
++                        if ((pathbuf = malloc(homelen + strlen(cwd)))) {
++                            strcpy(strcpy(pathbuf, home) + homelen, cwd + 1);
++                            cwd = pathbuf;
++                        }
++                    if (strchr(cwd, '/') && !stat(cwd, &statbuf)) {
++                        if (!S_ISDIR(statbuf.st_mode))
++                            cwd = dirname(cwd);
++                        if (!chdir(cwd))
++                            break;
++                    }
++                    cwd = strtok(NULL, spawn_cwd_delim);
++                }
++                free(pathbuf);
++            }
++
+             execl(_PATH_BSHELL, _PATH_BSHELL, "-c", command, (void*)NULL);
+             /* not reached */
+         }

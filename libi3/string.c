@@ -15,13 +15,6 @@
 
 #include "libi3.h"
 
-struct _i3String {
-    char *utf8;
-    xcb_char2b_t *ucs2;
-    size_t num_glyphs;
-    size_t num_bytes;
-};
-
 /*
  * Build an i3String from an UTF-8 encoded string.
  * Returns the newly-allocated i3String.

@@ -25,14 +25,6 @@
  * Opaque data structure for storing strings.
  *
  */
-
-struct _i3String {
-    char *utf8;
-    xcb_char2b_t *ucs2;
-    size_t num_glyphs;
-    size_t num_bytes;
-};
-
 typedef struct _i3String i3String;
 
 typedef struct Font i3Font;
