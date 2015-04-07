@@ -31,16 +31,17 @@ endif
 
 ## Generic flags
 
+# Default LDFLAGS that users should be able to override
+LDFLAGS ?= $(as_needed_LDFLAG)
+
 # Default CFLAGS that users should be able to override
 ifeq ($(DEBUG),1)
 # Extended debugging flags, macros shall be available in gcc
 CFLAGS ?= -pipe -gdwarf-2 -g3
 else
-CFLAGS ?= -pipe -O3 -march=native -mtune=native -freorder-blocks-and-partition
+CFLAGS ?= -pipe -flto -O3 -march=native -mtune=native -freorder-blocks-and-partition
+LDFLAGS += -flto
 endif
-
-# Default LDFLAGS that users should be able to override
-LDFLAGS ?= $(as_needed_LDFLAG)
 
 # Common CFLAGS for all i3 related binaries
 I3_CFLAGS  = -std=c99
@@ -199,4 +200,3 @@ endif
 
 # Always remake the following targets
 .PHONY: install clean dist distclean
-

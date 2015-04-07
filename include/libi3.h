@@ -144,6 +144,20 @@ char *sstrdup(const char *str);
 int sasprintf(char **strp, const char *fmt, ...);
 
 /**
+ * Wrapper around correct write which returns -1 (meaning that
+ * write failed) or count (meaning that all bytes were written)
+ *
+ */
+ssize_t writeall(int fd, const void *buf, size_t count);
+
+/**
+ * Safe-wrapper around writeall which exits if it returns -1 (meaning that
+ * write failed)
+ *
+ */
+ssize_t swrite(int fd, const void *buf, size_t count);
+
+/**
  * Build an i3String from an UTF-8 encoded string.
  * Returns the newly-allocated i3String.
  *
@@ -177,6 +191,12 @@ i3String *i3string_from_markup_with_length(const char *from_markup, size_t num_b
  *
  */
 i3String *i3string_from_ucs2(const xcb_char2b_t *from_ucs2, size_t num_glyphs);
+
+/**
+ * Copies the given i3string.
+ * Note that this will not free the source string.
+ */
+i3String *i3string_copy(i3String *str);
 
 /**
  * Free an i3String.
@@ -219,6 +239,11 @@ size_t i3string_get_num_bytes(i3String *str);
  * Whether the given i3String is in Pango markup.
  */
 bool i3string_is_markup(i3String *str);
+
+/**
+ * Set whether the i3String should use Pango markup.
+ */
+void i3string_set_markup(i3String *str, bool is_markup);
 
 /**
  * Returns the number of glyphs in an i3String.
@@ -418,3 +443,27 @@ char *get_exe_path(const char *argv0);
  *
  */
 int logical_px(const int logical);
+
+/**
+ * This function resolves ~ in pathnames.
+ * It may resolve wildcards in the first part of the path, but if no match
+ * or multiple matches are found, it just returns a copy of path as given.
+ *
+ */
+char *resolve_tilde(const char *path);
+
+/**
+ * Get the path of the first configuration file found. If override_configpath
+ * is specified, that path is returned and saved for further calls. Otherwise,
+ * checks the home directory first, then the system directory first, always
+ * taking into account the XDG Base Directory Specification ($XDG_CONFIG_HOME,
+ * $XDG_CONFIG_DIRS)
+ *
+ */
+char *get_config_path(const char *override_configpath, bool use_system_paths);
+
+/**
+ * Emulates mkdir -p (creates any missing folders)
+ *
+ */
+bool mkdirp(const char *path);

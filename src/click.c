@@ -46,6 +46,9 @@ static bool tiling_resize_for_border(Con *con, border_t border, xcb_button_press
         case BORDER_BOTTOM:
             search_direction = D_DOWN;
             break;
+        default:
+            assert(false);
+            break;
     }
 
     bool res = resize_find_tiling_participants(&first, &second, search_direction);
@@ -177,6 +180,9 @@ static int route_click(Con *con, xcb_button_press_event_t *event, const bool mod
     if (con->parent->type == CT_DOCKAREA)
         goto done;
 
+    const bool is_left_or_right_click = (event->detail == XCB_BUTTON_INDEX_1 ||
+                                         event->detail == XCB_BUTTON_INDEX_3);
+
     /* if the user has bound an action to this click, it should override the
      * default behavior. */
     if (dest == CLICK_DECORATION || dest == CLICK_INSIDE) {
@@ -275,7 +281,8 @@ static int route_click(Con *con, xcb_button_press_event_t *event, const bool mod
             return 1;
         }
 
-        if (!in_stacked && dest == CLICK_DECORATION) {
+        if (!in_stacked && dest == CLICK_DECORATION &&
+            is_left_or_right_click) {
             /* try tiling resize, but continue if it doesn’t work */
             DLOG("tiling resize with fallback\n");
             if (tiling_resize(con, event, dest))
@@ -288,7 +295,7 @@ static int route_click(Con *con, xcb_button_press_event_t *event, const bool mod
             return 1;
         }
 
-        if (dest == CLICK_BORDER) {
+        if (dest == CLICK_BORDER && is_left_or_right_click) {
             DLOG("floating resize due to border click\n");
             floating_resize_window(floatingcon, proportional, event);
             return 1;
@@ -296,7 +303,8 @@ static int route_click(Con *con, xcb_button_press_event_t *event, const bool mod
 
         /* 6: dragging, if this was a click on a decoration (which did not lead
          * to a resize) */
-        if (!in_stacked && dest == CLICK_DECORATION) {
+        if (!in_stacked && dest == CLICK_DECORATION &&
+            (event->detail == XCB_BUTTON_INDEX_1)) {
             floating_drag_window(floatingcon, event);
             return 1;
         }
@@ -317,8 +325,7 @@ static int route_click(Con *con, xcb_button_press_event_t *event, const bool mod
     }
     /* 8: otherwise, check for border/decoration clicks and resize */
     else if ((dest == CLICK_BORDER || dest == CLICK_DECORATION) &&
-             (event->detail == XCB_BUTTON_INDEX_1 ||
-              event->detail == XCB_BUTTON_INDEX_3)) {
+             is_left_or_right_click) {
         DLOG("Trying to resize (tiling)\n");
         tiling_resize(con, event, dest);
     }
@@ -380,11 +387,6 @@ int handle_button_press(xcb_button_press_event_t *event) {
         return 0;
     }
 
-    if (event->child != XCB_NONE) {
-        DLOG("event->child not XCB_NONE, so this is an event which originated from a click into the application, but the application did not handle it.\n");
-        return route_click(con, event, mod_pressed, CLICK_INSIDE);
-    }
-
     /* Check if the click was on the decoration of a child */
     Con *child;
     TAILQ_FOREACH(child, &(con->nodes_head), nodes) {
@@ -392,6 +394,11 @@ int handle_button_press(xcb_button_press_event_t *event) {
             continue;
 
         return route_click(child, event, mod_pressed, CLICK_DECORATION);
+    }
+
+    if (event->child != XCB_NONE) {
+        DLOG("event->child not XCB_NONE, so this is an event which originated from a click into the application, but the application did not handle it.\n");
+        return route_click(con, event, mod_pressed, CLICK_INSIDE);
     }
 
     return route_click(con, event, mod_pressed, CLICK_BORDER);
