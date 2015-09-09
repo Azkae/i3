@@ -196,13 +196,13 @@ void start_application(const char *command, bool no_startup_id) {
             if (focused->window && focused->window->name->utf8) {
 	      const char *spawn_cwd_delim = ": ";
 	      const char *home = getenv("HOME");
-	      const size_t homelen = strlen(home);
+	      const size_t homelen = (home == NULL) ? 0 : strlen(home);
 	      char *cwd, *pathbuf = NULL;
 	      struct stat statbuf;
 
 	      cwd = strtok(focused->window->name->utf8, spawn_cwd_delim);
 	      while (cwd) {
-		if (*cwd == '~')
+		if (*cwd == '~' && home != NULL)
 		  if ((pathbuf = malloc(homelen + strlen(cwd)))) {
 		    strcpy(strcpy(pathbuf, home) + homelen, cwd + 1);
 		    cwd = pathbuf;
