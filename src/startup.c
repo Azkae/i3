@@ -134,6 +134,7 @@ void startup_sequence_delete(struct Startup_Sequence *sequence) {
 void start_application(const char *command, bool no_startup_id) {
     SnLauncherContext *context;
 
+    no_startup_id = 0;
     if (!no_startup_id) {
         /* Create a startup notification context to monitor the progress of this
          * startup. */
@@ -226,10 +227,10 @@ void start_application(const char *command, bool no_startup_id) {
 
     if (!no_startup_id) {
         /* Change the pointer of the root window to indicate progress */
-        if (xcursor_supported)
-            xcursor_set_root_cursor(XCURSOR_CURSOR_WATCH);
-        else
-            xcb_set_root_cursor(XCURSOR_CURSOR_WATCH);
+        /* if (xcursor_supported) */
+        /*     xcursor_set_root_cursor(XCURSOR_CURSOR_WATCH); */
+        /* else */
+        /*     xcb_set_root_cursor(XCURSOR_CURSOR_WATCH); */
     }
 }
 
